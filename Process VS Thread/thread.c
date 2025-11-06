@@ -5,8 +5,8 @@
 #include <time.h>
 #include <pthread.h>
 
-#define BUFFER_SIZE 2000
-#define NUMS 10
+#define BUFFER_SIZE 20000
+#define NUMS 1000000
 
 int buffer[BUFFER_SIZE];
 int count = 0;
@@ -16,25 +16,25 @@ pthread_cond_t cond_full = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cond_empty = PTHREAD_COND_INITIALIZER;
 
 void* producer(void* arg) {
-    int produced_value = 1;
+    printf("producer started\n");
     for (int i = 0; i < NUMS; i++) {
         pthread_mutex_lock(&mutex);
         while (count == BUFFER_SIZE) {
             // wait for empty
             pthread_cond_wait(&cond_empty, &mutex);
         }
-        buffer[count] = produced_value;
-        printf("producer produced %d\n", produced_value);
+        buffer[count] = i;
+        printf("produced %d\n", i);
         count++;
-        produced_value++;
+        //usleep(100000);
         pthread_cond_signal(&cond_full);
-        pthread_mutex_unlock(&mutex);d
-        //sleep(1);
+        pthread_mutex_unlock(&mutex);
     }
     return NULL;
 }
 
 void* consumer(void* arg) {
+    printf("consumer started\n");
     int sum = 0;
     int consumed_value;
     for (int i = 0; i < NUMS; i++) {
@@ -45,11 +45,11 @@ void* consumer(void* arg) {
         }
         consumed_value = buffer[count - 1];
         count--;
-        printf("consumer consumed %d\n", consumed_value);
+        printf("consumed %d\n", consumed_value);
         sum += consumed_value;
+        //usleep(100000);
         pthread_cond_signal(&cond_empty);
         pthread_mutex_unlock(&mutex);
-        //sleep(1);
     }
 
     printf("consumer result: sum = %d\n", sum);
